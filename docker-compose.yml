@@ -1,0 +1,56 @@
+version: "0.2"
+
+services:
+
+  database:
+    image: postgres:15
+    container_name: monitor_db
+    restart: always
+    environment:
+      POSTGRES_USER: monitor
+      POSTGRES_PASSWORD: monitor123
+      POSTGRES_DB: monitoramento
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: monitor_mqtt
+    restart: always
+    ports:
+      - "1883:1883"
+
+  vision:
+    image: python:3.11
+    container_name: monitor_vision
+    working_dir: /app
+    volumes:
+      - ./vision:/app
+    command: sh -c "pip install opencv-python paho-mqtt && python vision.py"
+    depends_on:
+      - mqtt
+
+  cpp_engine:
+    build: ./cpp-engine
+    container_name: monitor_engine
+    depends_on:
+      - mqtt
+      - database
+
+  backend:
+    image: python:3.11
+    container_name: monitor_backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: sh -c "pip install flask psycopg2-binary paho-mqtt && python app.py"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - database
+      - mqtt
+
+volumes:
+  db_data:
