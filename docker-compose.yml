@@ -1,56 +1,72 @@
-version: "0.2"
-
 services:
 
-  database:
+  # ========================================
+  # SERVIÇO BANCO DE DADOS POSTGRESQL
+  # ========================================
+  banco_dados:
     image: postgres:15
-    container_name: monitor_db
-    restart: always
+    container_name: banco_monitoramento
+    restart: unless-stopped
+
     environment:
-      POSTGRES_USER: monitor
-      POSTGRES_PASSWORD: monitor123
-      POSTGRES_DB: monitoramento
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+      POSTGRES_USER: ${USUARIO_BANCO}
+      POSTGRES_PASSWORD: ${SENHA_BANCO}
+      POSTGRES_DB: ${NOME_BANCO}
 
-  mqtt:
+    volumes:
+      - dados_postgres:/var/lib/postgresql/data
+
+  # ========================================
+  # SERVIÇO MQTT - COMUNICAÇÃO INTERNA
+  # ========================================
+  broker_mqtt:
     image: eclipse-mosquitto:2
-    container_name: monitor_mqtt
-    restart: always
-    ports:
-      - "1883:1883"
+    container_name: broker_mqtt
+    restart: unless-stopped
 
-  vision:
-    image: python:3.11
-    container_name: monitor_vision
-    working_dir: /app
-    volumes:
-      - ./vision:/app
-    command: sh -c "pip install opencv-python paho-mqtt && python vision.py"
+    # Não expomos porta externa (boa prática de segurança)
+    # Comunicação será interna entre containers
+
+  # ========================================
+  # SERVIÇO FRIGATE - NVR COM IA
+  # ========================================
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: nvr_ia
+    restart: unless-stopped
+    privileged: true
+    shm_size: "512mb"
+
     depends_on:
-      - mqtt
+      - broker_mqtt
 
-  cpp_engine:
-    build: ./cpp-engine
-    container_name: monitor_engine
-    depends_on:
-      - mqtt
-      - database
-
-  backend:
-    image: python:3.11
-    container_name: monitor_backend
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    command: sh -c "pip install flask psycopg2-binary paho-mqtt && python app.py"
     ports:
       - "5000:5000"
+      - "1935:1935"
+
+    volumes:
+      - ./frigate/config.yml:/config/config.yml
+      - ./midias:/media/frigate
+
+    env_file:
+      - .env
+  # ========================================
+  # SERVIÇO BACKEND - API FASTAPI
+  # ========================================
+  backend:
+    build: ./backend
+    container_name: api_monitoramento
+    restart: unless-stopped
+
     depends_on:
-      - database
-      - mqtt
+      - banco_dados
+      - broker_mqtt
+
+    env_file:
+      - .env
+
+    ports:
+      - "8000:8000"
 
 volumes:
-  db_data:
+  dados_postgres:

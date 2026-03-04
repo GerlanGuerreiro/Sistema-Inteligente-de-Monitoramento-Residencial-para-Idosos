@@ -1,0 +1,59 @@
+# ==========================================================
+# CONFIGURAÇÃO PRINCIPAL DO FRIGATE
+# ==========================================================
+
+mqtt:
+  # Endereço do broker MQTT
+  host: broker_mqtt
+
+  # Porta padrão MQTT
+  port: 1883
+
+  # Usuário e senha definidos no .env
+  #user: "{USUARIO_MQTT}"
+  #password: "{SENHA_MQTT}"
+# ==========================================================
+# CONFIGURAÇÃO DO DETECTOR
+# ==========================================================
+
+detectors:
+  cpu1:
+    type: cpu
+
+# ==========================================================
+# CONFIGURAÇÃO DA CÂMERA
+# ==========================================================
+cameras:
+  camera_idoso:
+    ffmpeg:
+      inputs:
+        - path: "rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=1"
+          input_args:
+            - -rtsp_transport
+            - tcp
+          roles:
+            - detect
+
+        - path: "rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=0"
+          input_args:
+            - -rtsp_transport
+            - tcp
+          roles:
+            - record
+
+    detect:
+      enabled: true
+
+    objects:
+      track:
+        - person
+
+    record:
+      enabled: true
+      continuous:
+        days: 7
+      motion:
+        days: 0
+    snapshots:
+      enabled: true
+version: 0.17-0
