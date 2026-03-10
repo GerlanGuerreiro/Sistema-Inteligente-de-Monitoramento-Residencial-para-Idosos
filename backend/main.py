@@ -10,6 +10,7 @@ Responsável por:
 from fastapi import FastAPI
 from consumidor_mqtt import iniciar_consumidor
 from modelos import criar_tabela_eventos
+from consumidor_mqtt import iniciar_monitoramento
 
 app = FastAPI(
     title="API de Monitoramento Inteligente",
@@ -32,6 +33,9 @@ def ao_iniciar_aplicacao():
 
     print("Iniciando consumidor MQTT...")
     iniciar_consumidor()
+
+    print("Iniciando monitoramento do idoso...")
+    iniciar_monitoramento()
 
 @app.get("/")
 def rota_inicial():

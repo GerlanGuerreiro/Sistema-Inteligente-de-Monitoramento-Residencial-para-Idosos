@@ -12,9 +12,13 @@ Este módulo realiza:
 import os
 import json
 import paho.mqtt.client as mqtt
+import threading
+import time
+from monitoramento_idoso import verificar_inatividade
 from dotenv import load_dotenv
 from banco_dados import obter_conexao
 from datetime import datetime
+from monitoramento_idoso import registrar_presenca
 
 # ==========================================
 # CARREGAR VARIÁVEIS DO ARQUIVO .env
@@ -56,17 +60,21 @@ def ao_receber_mensagem(cliente, dados_usuario, mensagem):
     """
 
     try:
+
         carga_util = json.loads(mensagem.payload.decode())
 
         tipo_evento = carga_util.get("type")
         dados_evento = carga_util.get("after")
 
-        # Verifica se é evento novo e se detectou pessoa
-        if tipo_evento == "new" and dados_evento:
-            objeto_detectado = dados_evento.get("label")
-            horario_inicio = dados_evento.get("start_time")
-            nome_camera = dados_evento.get("camera")
+        # Ignora mensagens que não são eventos novos
+        if tipo_evento != "new" or not dados_evento:
+            return
 
+        objeto_detectado = dados_evento.get("label")
+        horario_inicio = dados_evento.get("start_time")
+        nome_camera = dados_evento.get("camera")
+
+        # Verifica se objeto detectado é pessoa
         if objeto_detectado == "person":
 
             print("Pessoa detectada. Registrando no banco...")
@@ -140,3 +148,27 @@ def registrar_evento_banco(tipo_evento, objeto_detectado, horario_evento, camera
         conexao.close()
 
         print("Evento registrado no banco com sucesso.")
+
+
+# ==========================================
+# VERIFICADOR PERIÓDICO
+# ==========================================
+def loop_monitoramento():
+    """
+    Loop que verifica inatividade periodicamente.
+    """
+
+    while True:
+        verificar_inatividade()
+        time.sleep(30)
+
+
+def iniciar_monitoramento():
+    """
+    Inicia thread paralela de monitoramento.
+    """
+
+    thread = threading.Thread(target=loop_monitoramento)
+    thread.daemon = True
+    thread.start()
+

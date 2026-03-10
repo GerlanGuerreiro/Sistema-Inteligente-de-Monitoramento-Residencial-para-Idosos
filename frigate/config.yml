@@ -2,6 +2,14 @@
 # CONFIGURAÇÃO PRINCIPAL DO FRIGATE
 # ==========================================================
 
+ffmpeg:
+  hwaccel_args: []
+  input_args:
+    - -avoid_negative_ts
+    - make_zero
+    - -fflags
+    - nobuffer
+
 mqtt:
   # Endereço do broker MQTT
   host: broker_mqtt
@@ -27,26 +35,27 @@ cameras:
   camera_idoso:
     ffmpeg:
       inputs:
-        - path: "rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=1"
-          input_args:
-            - -rtsp_transport
-            - tcp
+        - path: rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=1
           roles:
             - detect
 
-        - path: "rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=0"
-          input_args:
-            - -rtsp_transport
-            - tcp
+        - path: rtsp://admin:gd120294@192.168.0.101:554/cam/realmonitor?channel=1&subtype=0
           roles:
             - record
 
     detect:
       enabled: true
+      fps: 5
+      width: 640
+      height: 360
 
     objects:
       track:
         - person
+      filters:
+        person:
+          min_score: 0.5
+          threshold: 0.6
 
     record:
       enabled: true
