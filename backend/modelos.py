@@ -21,12 +21,13 @@ def criar_tabela_eventos():
             id SERIAL PRIMARY KEY,
             tipo_evento VARCHAR(100),
             objeto_detectado VARCHAR(100),
-            horario_evento TIMESTAMP,
             camera VARCHAR(100),
+            inicio_evento TIMESTAMP,
+            fim_evento TIMESTAMP,
+            duracao_segundos INTEGER,
             criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
-
         cursor.execute(comando_sql)
         conexao.commit()
 
@@ -34,3 +35,25 @@ def criar_tabela_eventos():
         conexao.close()
 
         print("Tabela eventos_monitoramento verificada/criada.")
+
+def criar_tabela_alertas():
+
+    conexao = obter_conexao()
+
+    if conexao:
+
+        cursor = conexao.cursor()
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alertas (
+            id SERIAL PRIMARY KEY,
+            tipo_alerta VARCHAR(100),
+            camera VARCHAR(100),
+            descricao TEXT,
+            criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        conexao.commit()
+        cursor.close()
+        conexao.close()

@@ -49,6 +49,38 @@ def verificar_inatividade():
             mensagem="Nenhuma pessoa detectada há muito tempo"
         )
 
+# ==========================================
+# DETECÇÃO SIMPLES DE QUEDA
+# ==========================================
+
+def verificar_queda(camera, bbox):
+    """
+    Detecta possível queda baseada no formato da bounding box.
+
+    bbox = [x1, y1, x2, y2]
+
+    Se largura > altura pode indicar pessoa deitada.
+    """
+
+    x1, y1, x2, y2 = bbox
+
+    largura = x2 - x1
+    altura = y2 - y1
+
+    # regra simples para exemplo acadêmico
+    if largura > altura:
+
+        alerta = {
+            "tipo_alerta": "queda",
+            "camera": camera,
+            "largura": largura,
+            "altura": altura
+        }
+
+        return alerta
+
+    return None
+
 
 def gerar_alerta(tipo, mensagem):
     """

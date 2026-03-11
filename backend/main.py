@@ -8,9 +8,8 @@ Responsável por:
 """
 
 from fastapi import FastAPI
-from consumidor_mqtt import iniciar_consumidor
-from modelos import criar_tabela_eventos
-from consumidor_mqtt import iniciar_monitoramento
+from consumidor_mqtt import iniciar_consumidor, iniciar_monitoramento
+from modelos import criar_tabela_eventos, criar_tabela_alertas
 
 app = FastAPI(
     title="API de Monitoramento Inteligente",
@@ -24,18 +23,17 @@ app = FastAPI(
 
 @app.on_event("startup")
 def ao_iniciar_aplicacao():
-    """
-    Executado automaticamente quando a API inicia.
-    """
 
     print("Criando/verificando tabelas...")
     criar_tabela_eventos()
+    criar_tabela_alertas()
 
     print("Iniciando consumidor MQTT...")
     iniciar_consumidor()
 
     print("Iniciando monitoramento do idoso...")
     iniciar_monitoramento()
+
 
 @app.get("/")
 def rota_inicial():

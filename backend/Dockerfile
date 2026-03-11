@@ -5,10 +5,10 @@ FROM python:3.11-slim
 WORKDIR /aplicacao
 
 # Copia arquivos para dentro do container
-COPY requisitos.txt .
+COPY requirements.txt .
 
 # Instala dependências
-RUN pip install --no-cache-dir -r requisitos.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia restante do código
 COPY . .

@@ -1,7 +1,7 @@
 services:
 
   # ========================================
-  # SERVIÇO BANCO DE DADOS POSTGRESQL
+  # BANCO POSTGRESQL
   # ========================================
   banco_dados:
     image: postgres:15
@@ -16,8 +16,9 @@ services:
     volumes:
       - dados_postgres:/var/lib/postgresql/data
 
+
   # ========================================
-  # SERVIÇO MQTT - COMUNICAÇÃO INTERNA
+  # BROKER MQTT
   # ========================================
   broker_mqtt:
     image: eclipse-mosquitto:2
@@ -25,12 +26,11 @@ services:
     restart: unless-stopped
 
     ports:
-    - "1883:1883"
-    # Não expomos porta externa (boa prática de segurança)
-    # Comunicação será interna entre containers
+      - "1883:1883"
+
 
   # ========================================
-  # SERVIÇO FRIGATE - NVR COM IA
+  # FRIGATE (CONFIGURAÇÃO PADRÃO)
   # ========================================
   frigate:
     image: ghcr.io/blakeblackshear/frigate:stable
@@ -47,13 +47,18 @@ services:
       - "1935:1935"
 
     volumes:
-      - ./frigate/config.yml:/config/config.yml
+      # CONFIGURAÇÃO COM CÂMERA REAL
+      - ./frigate/config.camera.yml:/config/config.yml
+
+      # DIRETÓRIO DE MÍDIAS
       - ./midias:/media/frigate
 
     env_file:
       - .env
+
+
   # ========================================
-  # SERVIÇO BACKEND - API FASTAPI
+  # BACKEND FASTAPI
   # ========================================
   backend:
     build: ./backend
@@ -69,6 +74,7 @@ services:
 
     ports:
       - "8000:8000"
+
 
 volumes:
   dados_postgres:
